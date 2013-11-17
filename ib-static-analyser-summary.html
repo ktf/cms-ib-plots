@@ -17,7 +17,6 @@
 <script src="src/models/scatter.js"></script>
 <script src="src/models/stackedArea.js"></script>
 <script src="src/models/stackedAreaChart.js"></script>
-<script src="testScript.js"></script>
 <script>
 
 var summaryDataUrl = "https://cmssdt.cern.ch/SDT/jenkins-artifacts/ib-static-analysis/static-analysis-summary.csv";
@@ -30,7 +29,6 @@ function parseDate(d) {
 
 d3.csv(summaryDataUrl, function(data) {
    data = data.sort();
-   console.log(data);
 
    var nest = d3.nest()
    	 .key(function(d) {return d["bug"]})
@@ -38,7 +36,10 @@ d3.csv(summaryDataUrl, function(data) {
    	 	{return l.map(function(d) {return [parseDate(d["release"]), parseInt(d["count"])]}).sort();})
    	 .entries(data);
    console.log(nest);
-   defaultChartConfig("chart1", nest.slice(1,29));
+   var ticks = d3.nest()
+     .key(function(d) {return parseDate(d["release"])})
+     .entries(data);
+   defaultChartConfig("chart1", nest.slice(1,29), ticks);
 });
 
 
@@ -48,7 +49,7 @@ d3.csv(summaryDataUrl, function(data) {
 var colors = d3.scale.category20();
 var keyColor = function(d, i) {return colors(d.key)};
 
-function defaultChartConfig(container, data, useGuideline) {
+function defaultChartConfig(container, data, ticks, useGuideline) {
   if (useGuideline === undefined) useGuideline = true;
   nv.addGraph(function() {
     var chart;
@@ -60,14 +61,20 @@ function defaultChartConfig(container, data, useGuideline) {
                     ;
 
     chart.xAxis
-        .tickFormat(function(d) { return d3.time.format('%Y-%m-%d')(new Date(d)) });
-
+        .rotateLabels(-15)
+        .staggerLabels(true)
+        .tickValues(ticks.map(function(d) {return parseInt(d["key"])}))
+        .tickFormat(function(d) { return d3.time.format('%Y-%m-%d-%H00')(new Date(d)) });
+    
     chart.yAxis
         .tickFormat(d3.format(',i'));
 
     d3.select('#' + container + ' svg')
           .datum(data)
         .transition().duration(500).call(chart);
+
+    });
+
 
     nv.utils.windowResize(chart.update);
 
