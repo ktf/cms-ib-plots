@@ -1,0 +1,6 @@
+## Client only summary pages.
+
+Initial setup for a set of web pages with summary information about IBs.
+
+The goal is to use [D3](http://d3js.org) and associated extensions to build web
+pages client side, without using any server side plotting.
